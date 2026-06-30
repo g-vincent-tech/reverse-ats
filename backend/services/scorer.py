@@ -99,25 +99,20 @@ The scorer will use keyword matching only until a resume is provided.
 # ---------------------------------------------------------------------------
 
 SYSTEM_PROMPT = (
-    "You are a job-fit evaluator scoring REAL selectability through an ATS — not just skill overlap.\n\n"
-    "STEP 1 — HARD REQUIREMENTS (knockouts): Identify any DISQUALIFYING gate in the JD — an ACTIVE "
-    "certification or license (e.g. 'active PMP', 'Epic certified', security clearance, RN, CPA), a specific "
-    "minimum number of years in a NAMED skill/tool, mandatory work authorization or required on-site "
-    "location, or an explicit 'must have' / 'required' gate. For EACH, decide whether the candidate CLEARLY "
-    "meets it from their profile. List every UNMET hard requirement in \"knockouts\". Note: a lapsed or "
-    "'previously held' cert does NOT meet an 'active' requirement; deep hands-on experience with a tool does "
-    "NOT satisfy a 'certified in <tool>' requirement.\n\n"
-    "STEP 2 — SCORE by experience depth: weight the candidate's strongest (most-years) skills most heavily. "
-    "BUT if \"knockouts\" is non-empty you MUST cap the score at 65 — a candidate an ATS would auto-filter "
-    "cannot be a 90 no matter how strong the skills fit. Give 90-100 ONLY when the fit is excellent AND there "
-    "are NO unmet hard requirements.\n\n"
+    "You are a job-fit evaluator. Score how well this job matches the candidate profile.\n\n"
+    "IMPORTANT — weight by EXPERIENCE DEPTH: the candidate profile lists their skill "
+    "areas strongest-first with years of experience. A job whose core requirements fall "
+    "in the candidate's HIGH-YEARS areas should score high; a job that mainly needs "
+    "skills the candidate has few years in scores lower even if they technically have it. "
+    "Reserve 90-100 for jobs the candidate is genuinely well-qualified for on their "
+    "strongest skills — those are the only ones worth applying to.\n\n"
     "Return ONLY valid JSON with this exact structure:\n"
     '{"score": <0-100>, "reasoning": "<2-3 sentence explanation>", '
-    '"match_highlights": ["<strength1>"], "concerns": ["<concern1>"], "knockouts": ["<unmet hard requirement>"]}\n\n'
+    '"match_highlights": ["<strength1>", "<strength2>"], "concerns": ["<concern1>"]}\n\n'
     "Scoring guide:\n"
-    "- 90-100: Excellent depth match AND all hard requirements met\n"
-    "- 70-89: Strong match, minor gaps, no knockouts\n"
-    "- 50-69: Moderate — good overlap on weaker/newer skills, OR capped here by an unmet hard requirement\n"
+    "- 90-100: Excellent match — core requirements align with the candidate's STRONGEST (most-years) skills\n"
+    "- 70-89: Strong match — most criteria align, minor gaps, or relies on mid-depth skills\n"
+    "- 50-69: Moderate match — good overlap but on weaker/newer skills or some seniority/domain mismatch\n"
     "- 30-49: Weak match — partial overlap, different domain or level\n"
     "- 0-29: Poor match — wrong field, wrong level, or missing critical skills"
 )
@@ -530,33 +525,19 @@ def _parse_llm_response(content: str) -> dict:
     raise ValueError(f"parse error: could not extract JSON score from LLM response")
 
 
-KNOCKOUT_CAP = 65
-
-
 def _validate_result(result: dict) -> dict:
-    """Ensure all required keys exist and the score is clamped to [0, 100].
-    Enforce the knockout cap server-side and surface unmet hard requirements."""
+    """Ensure all required keys exist and the score is clamped to [0, 100]."""
     score = result.get("score", 0)
     try:
         score = max(0, min(100, int(score)))
     except (ValueError, TypeError):
         score = 0
 
-    knockouts = [str(k).strip() for k in (result.get("knockouts") or []) if str(k).strip()]
-    reasoning = str(result.get("reasoning", "")).strip()
-    if knockouts:
-        # An ATS gate the candidate fails caps real selectability regardless of fit.
-        score = min(score, KNOCKOUT_CAP)
-        flag = "⚠️ KNOCKOUT — " + "; ".join(knockouts)
-        if flag.lower() not in reasoning.lower():
-            reasoning = f"{flag}. {reasoning}".strip()
-
     return {
         "score": score,
-        "reasoning": reasoning,
+        "reasoning": str(result.get("reasoning", "")).strip(),
         "match_highlights": list(result.get("match_highlights", [])),
         "concerns": list(result.get("concerns", [])),
-        "knockouts": knockouts,
     }
 
 
