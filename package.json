@@ -1,0 +1,10 @@
+{
+  "name": "reverse-ats",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "start": "node scripts/dev.mjs",
+    "dev:local": "node scripts/dev.mjs"
+  }
+}

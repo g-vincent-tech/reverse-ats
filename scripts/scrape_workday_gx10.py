@@ -44,8 +44,8 @@ sys.path.insert(0, str(REPO_ROOT / "scraper"))
 sys.path.insert(0, str(REPO_ROOT / "backend"))
 
 from job_scraper import COMPANIES, scrape_company  # noqa: E402
-from d1_uploader import push_jobs                   # noqa: E402
-from db import job_id_hash                          # noqa: E402
+from repositories.d1_uploader import push_jobs                   # noqa: E402
+from repositories.database import job_id_hash                          # noqa: E402
 
 
 def _setup_logging() -> logging.Logger:

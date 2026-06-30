@@ -4,7 +4,7 @@ Uses stdlib sqlite3 only — no ORM dependencies.
 
 Path resolution:
   - Production: set REVERSE_ATS_DB_PATH env var to your preferred location
-  - Local dev fallback: <this file's directory>/reverse_ats.db
+  - Local dev fallback: <backend>/reverse_ats.db
 """
 from __future__ import annotations
 
@@ -22,7 +22,8 @@ from typing import Optional
 # Path resolution
 # ---------------------------------------------------------------------------
 
-LOCAL_DB_PATH = Path(__file__).parent / "reverse_ats.db"
+BACKEND_ROOT = Path(__file__).resolve().parent.parent
+LOCAL_DB_PATH = BACKEND_ROOT / "reverse_ats.db"
 
 
 def get_db_path() -> str:
@@ -737,7 +738,7 @@ def get_jobs(
     # AND-across-levels matching in Python (SQL LIKE can't express this).
     # Fetch the SQL pre-filtered candidates first, then post-filter.
     if locations:
-        from location_parser import job_matches_locations
+        from services.location_parser import job_matches_locations
 
         candidate_rows = conn.execute(
             f"""

@@ -39,10 +39,10 @@ MIN_SCORE = int(os.environ.get("DIGEST_MIN_SCORE", "90"))
 MAX_JOBS = int(os.environ.get("DIGEST_MAX_JOBS", "25"))
 PACE_SECONDS = float(os.environ.get("DIGEST_PACE", "2"))
 
-import db  # noqa: E402
-from scorer import tailor_master_resume, generate_cover_letter  # noqa: E402
-import resume_tailor as rt  # noqa: E402
-from docgen import slug, master_resume_to_docx, cover_to_docx  # noqa: E402
+import repositories.database as db  # noqa: E402
+from services.scorer import tailor_master_resume, generate_cover_letter  # noqa: E402
+from services import resume_tailor as rt  # noqa: E402
+from services.docgen import slug, master_resume_to_docx, cover_to_docx  # noqa: E402
 
 
 def log(msg: str) -> None:
@@ -119,7 +119,7 @@ def main() -> int:
 
     profile = {}
     try:
-        from db import get_profile
+        from repositories.database import get_profile
         profile = get_profile(conn) or {}
     except Exception:  # noqa: BLE001
         pass
@@ -129,7 +129,7 @@ def main() -> int:
         return 3
 
     try:
-        from db import get_llm_settings
+        from repositories.database import get_llm_settings
         settings = get_llm_settings(conn)
     except Exception:  # noqa: BLE001
         settings = None

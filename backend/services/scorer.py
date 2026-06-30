@@ -604,7 +604,7 @@ No prose, no markdown fences."""
 
 def tailor_master_resume(master_text: str, job: dict, settings: Optional[dict] = None) -> dict:
     """Surgically tailor a master résumé to a job. Returns {name, contact, target_title, sections} or {error}."""
-    import resume_tailor as rt
+    from services import resume_tailor as rt
 
     if not settings or settings.get("provider") == "keyword_only":
         return {"error": "Tailored résumé requires an LLM provider (Admin → LLM Settings)."}

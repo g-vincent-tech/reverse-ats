@@ -18,7 +18,7 @@ REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO / "backend"))
 sys.path.insert(0, str(REPO / "scripts"))
 
-import db  # backend/db.py  # noqa: E402
+import repositories.database as db  # noqa: E402
 from scrape_remotefirstjobs import _fetch_page, _map  # noqa: E402
 
 
